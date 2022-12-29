@@ -60,4 +60,4 @@ class UserActivities(models.Model):
         ordering = ("-created_at", )
 
     def __str__(self):
-        return f"{self.fullname} {self.action} on {self.created_at.strftime('%d-%m-%Y %H:%M:%S')}"
+        return f"{self.fullname} {self.action} on {self.created_at.strftime('%d-%m-%Y %H:%M')}"

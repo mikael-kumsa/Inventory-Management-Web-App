@@ -1,7 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import CreateUserSerializer, LoginSerializer, UpadtePasswordSerializer, CustomUserSerializer,CustomUser
+from .serializers import CreateUserSerializer, LoginSerializer, UpadtePasswordSerializer, CustomUserSerializer,CustomUser, UserActivities, UserActivitiesSerializer
 from django.contrib.auth import authenticate
 from datetime import datetime
 from inventory_api.utils import get_access_token
@@ -100,5 +100,12 @@ class MeView(ModelViewSet):
     def list(self, request):
         data = self.serializer_class(request.user).data
         return Response(data)
+
+class UserActivitiesView(ModelViewSet):
+    serializer_class = UserActivitiesSerializer
+    http_method_names = ["get"]
+    queryset = UserActivities.objects.select_related("user")
+    permission_classes = (IsAuthenticatedCustom,)
+
 
 
