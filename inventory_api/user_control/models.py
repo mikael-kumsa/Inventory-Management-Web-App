@@ -7,7 +7,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 Roles = (("admin", "admin"), ("creator", "creator"), ("sales", "sales"))
 
 
-
 class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, password, **extra_fields):

@@ -10,6 +10,15 @@ from inventory_api.custom_methods import IsAuthenticatedCustom
 
 
 
+def add_user_activity(user, action):
+    UserActivities.objects.create(
+        user_id = user.id,
+        email = user.email,
+        fullname = user.fullname,
+        action = action
+    )
+
+
 class CreateUserView(ModelViewSet):
     http_method_names = ["post"]
     queryset = CustomUser.objects.all()
@@ -21,6 +30,8 @@ class CreateUserView(ModelViewSet):
         valid_request.is_valid(raise_exception=True)
 
         CustomUser.objects.create(**valid_request.validated_data)
+
+        add_user_activity(request.user, "Created New User")
 
         return Response({"Success": "User created successfully!"}, status=status.HTTP_201_CREATED)
 
@@ -63,6 +74,8 @@ class LoginView(ModelViewSet):
         access = get_access_token({"user_id": user.id}, 1)
         user.last_login = datetime.now()
 
+        add_user_activity(user, "Logged In")
+
         user.save()
 
         return Response({"access": access})
@@ -88,6 +101,8 @@ class UpdatePassword(ModelViewSet):
         user.set_password(valid_request.validated_data["password"])
         user.save()
 
+        add_user_activity(request.user, "Updated Password")
+
         return Response({"success": "Password Updated Successfully!"})
 
 
@@ -104,16 +119,17 @@ class MeView(ModelViewSet):
 class UserActivitiesView(ModelViewSet):
     serializer_class = UserActivitiesSerializer
     http_method_names = ["get"]
-    queryset = UserActivities.objects.select_related("user")
+    queryset = UserActivities.objects.all()
     permission_classes = (IsAuthenticatedCustom,)
 
 
 class UsersView(ModelViewSet):
     serializer_class = CreateUserSerializer
     http_method_names = ["get"]
-    queryset = CustomUser.objects.prefetch_related("user_activities")
+    queryset = CustomUser.objects.all()
     permission_classes = (IsAuthenticatedCustom, )
 
     def list(self, request):
-        data = self.serializer_class(self.queryset, many=True).data
+        users = self.queryset.filter(is_superuser=False)
+        data = self.serializer_class(users, many=True).data
         return Response(data)
