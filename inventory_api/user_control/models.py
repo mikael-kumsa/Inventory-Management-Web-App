@@ -48,3 +48,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         ordering = ("created_at", )
+
+class UserActivities(models.Model):
+    user = models.ForeignKey(CustomUser,related_name="user_activities", null=True, on_delete=models.SET_NULL)
+    email = models.EmailField()
+    fullname = models.CharField(max_length=256)
+    action = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ("-created_at", )
+
+    def __str__(self):
+        return f"{self.fullname} {self.action} on {self.created_at.strftime('%d-%m-%Y %H:%M:%S')}"
