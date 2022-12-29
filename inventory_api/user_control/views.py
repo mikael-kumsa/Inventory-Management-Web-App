@@ -108,4 +108,12 @@ class UserActivitiesView(ModelViewSet):
     permission_classes = (IsAuthenticatedCustom,)
 
 
+class UsersView(ModelViewSet):
+    serializer_class = CreateUserSerializer
+    http_method_names = ["get"]
+    queryset = CustomUser.objects.prefetch_related("user_activities")
+    permission_classes = (IsAuthenticatedCustom, )
 
+    def list(self, request):
+        data = self.serializer_class(self.queryset, many=True).data
+        return Response(data)
