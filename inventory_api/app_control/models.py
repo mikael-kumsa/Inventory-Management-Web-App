@@ -36,10 +36,10 @@ class InventoryGroup(models.Model):
         return self.name
 
 class Inventory(models.Model):
-    created_by = models.ForeignKey(CustomUser, null=True, related_name="inventory_groups",on_delete=models.SET_NULL)
+    created_by = models.ForeignKey(CustomUser, null=True, related_name="inventory_items",on_delete=models.SET_NULL)
     code = models.CharField(max_length=100, unique=True, null=True)
     photo = models.TextField(blank=True, null=True)
-    groups = models.ForeignKey(InventoryGroup, related_name="inventory_groups", null=True, on_delete=models.SET_NULL)
+    groups = models.ForeignKey(InventoryGroup, related_name="inventories", null=True, on_delete=models.SET_NULL)
     total = models.PositiveIntegerField()
     remaining = models.PositiveIntegerField(null=True)
     name = models.CharField(max_length=256)
