@@ -1,5 +1,5 @@
 from rest_framework.viewsets import ModelViewSet
-from .serializers import InventoryGroupSerializer, InventorySerializer, InventoryGroup, Inventory
+from .serializers import InventoryGroupSerializer, InventorySerializer, InventoryGroup, Inventory, ShopSerializer, Shop
 from rest_framework.response import Response
 from inventory_api.custom_methods import IsAuthenticatedCustom
 from inventory_api.utils import CustomPagination, get_query
@@ -37,7 +37,7 @@ class InventoryGroupView(ModelViewSet):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        if self.queryset.method != "GET":
+        if self.queryset.method.lower() != "GET":
             return self.queryset
         
         data = self.request.query_params.dict()
@@ -53,6 +53,33 @@ class InventoryGroupView(ModelViewSet):
         return results.annotate(
             total_items=Count('inventories')
         )
+    
+    def create(self, request, *args, **kwargs):
+        request.data.update({'created_by_id': request.user.id})
+        return super().create(request, *args, **kwargs)
+
+class ShopView(ModelViewSet):
+    queryset = Shop.objects.select_related('created_by')
+    serializer_class = ShopSerializer
+    permission_classes = [IsAuthenticatedCustom]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        if self.queryset.method.lower() != "GET":
+            return self.queryset
+        
+        data = self.request.query_params.dict()
+        data.pop("page")
+        keyword = data.pop("keyword", None)
+
+        results = get_query(**data)
+
+        if keyword:
+            search_fields = ("creatd_by__fullname", "name", "created_by__email")
+            query = get_query(keyword, search_fields)
+            results = results.filter(query)
+        
+        return results
     
     def create(self, request, *args, **kwargs):
         request.data.update({'created_by_id': request.user.id})
