@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from user_control.models import CustomUser
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
 import re
 
 def get_access_token(payload, days):
@@ -56,3 +57,5 @@ def get_query(query_string, search_fields):
         else:
             query = query & or_query
         return query
+
+        
