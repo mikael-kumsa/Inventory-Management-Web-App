@@ -132,7 +132,7 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey(Invoice, related_name="invoice_items", on_delete=models.SET_NULL)
-    item = models.ForeignKey(Inventory, related_name="inventory_items", null=True, on_delete=models.SET_NULL)
+    item = models.ForeignKey(Inventory, related_name="inventory_invoices", null=True, on_delete=models.SET_NULL)
     item_name = models.CharField(max_length=256, null=True)
     item_code = models.CharField(max_length=10, null=True)
     quantity = models.PositiveIntegerField()
