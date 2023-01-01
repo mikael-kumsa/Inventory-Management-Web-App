@@ -1,4 +1,4 @@
-from .models import Inventory, InventoryGroup, Shop
+from .models import Inventory, InventoryGroup, Shop, Invoice, InvoiceItem
 from rest_framework import serializers
 from user_control.serializers import CustomUserSerializer
 
@@ -40,3 +40,30 @@ class ShopSerializer(serializers.ModelSerializer):
     class Meta:
         model = Shop
         fields = '__all__'
+
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    invoice = serializers.CharField(read_only=True)
+    invoice_id = serializers.CharField(write_only=True)
+    item = serializers.CharField(read_only=True)
+    item_id = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = InvoiceItem
+        fields = '__all__'
+    
+
+class InvoiceItemDataSerializer(serializers.ModelSerializer):
+        item_id = serializers.CharField()
+        quantity = serializers.IntegerField()
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    created_by = CustomUserSerializer(read_only=True)
+    created_by_id = serializers.CharField(write_only=True, required=False)
+    shop = ShopSerializer(read_only=True)
+    shop_id = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+
+    
