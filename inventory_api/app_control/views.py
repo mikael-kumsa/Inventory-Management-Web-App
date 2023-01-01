@@ -85,7 +85,7 @@ class ShopView(ModelViewSet):
         return super().create(request, *args, **kwargs)
 
 class InvoiceView(ModelViewSet):
-    queryset = Invoice.objects.select_related('created_by', 'shop')
+    queryset = Invoice.objects.select_related('created_by', 'shop').prefetch_related("invoice_items")
     serializer_class = InvoiceSerializer
     permission_classes = [IsAuthenticatedCustom]
     pagination_class = CustomPagination
@@ -101,7 +101,7 @@ class InvoiceView(ModelViewSet):
         results = get_query(**data)
 
         if keyword:
-            search_fields = ("creatd_by__fullname", "name", "created_by__email")
+            search_fields = ("creatd_by__fullname", "shop__name", "created_by__email")
             query = get_query(keyword, search_fields)
             results = results.filter(query)
         
