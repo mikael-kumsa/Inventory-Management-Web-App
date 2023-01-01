@@ -1,7 +1,7 @@
 from django.db import models
 from user_control.models import CustomUser
 from user_control.views import add_user_activity
-# Create your models here.
+
 
 class InventoryGroup(models.Model):
     created_by = models.ForeignKey(CustomUser, 
