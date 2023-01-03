@@ -1,14 +1,14 @@
 from rest_framework.viewsets import ModelViewSet
 from .serializers import (InventoryGroupSerializer, InventorySerializer, InventoryGroup,
                          Inventory, ShopSerializer, Shop, Invoice, InvoiceSerializer, InvoiceItem,
-                          InventoryWithSumSerializer, ShopWithAmountSerializer)
+                          InventoryWithSumSerializer, ShopWithAmountSerializer,)
 from inventory_api.utils import CustomPagination, get_query
 from django.db.models import Count, Sum, F
 from django.db.models.functions import Coalesce, TruncMonth
 from user_control.models import CustomUser
 from rest_framework.response import Response
 from inventory_api.custom_methods import IsAuthenticatedCustom
-
+import csv, codecs
 
 class InventoryView(ModelViewSet):
     queryset = Inventory.objects.select_related('group', 'created_by')
@@ -195,3 +195,68 @@ class SaleByShopView(ModelViewSet):
 
         response_data = ShopWithAmountSerializer(shops, many=True).data
         return Response(response_data)
+
+class PurchaseView(ModelViewSet):
+    http_method_names = ('get',)
+    permission_classes = (IsAuthenticatedCustom,)
+    queryset = InventoryView.queryset
+
+    def list(self, request, *args, **kwargs):
+        query_data = request.query_params.dict()
+        total = query_data.get("total", None)
+        query = InvoiceItem.objects.select_related("invoice", "item")
+
+        if not total:
+            start_date = query_data.get("start_date", None)
+            end_date = query_data.get("end_date", None)
+            if start_date:
+                query = query.filter(
+                created_at__range = [start_date, end_date]
+            )
+
+            query = query.aggregate(amount_total = sum(F("amount") *F("quantity")), total = Sum("quantity"))
+
+        return Response({
+            "price": "0.00" if not query.get("amount_total") else query.get("amount_total"),
+            "count": 0 if not query.get("total") else query.get("total")
+        })
+
+class InventoryCSVLoaderView(ModelViewSet):
+    http_method_names = ("post",)
+    queryset = InventoryView.queryset
+    permission_classes = (IsAuthenticatedCustom,)
+    serializer_class = InventorySerializer
+    
+
+    def create(self, request, *args, **kwargs):
+        try:
+            data = request.FILES['data']
+        except Exception as e:
+            raise Exception("You need to upload a csv file")
+
+        inventory_items = []
+
+        try: 
+            csv_reader = csv.reader(codecs.iterdecode(data, 'utf-8'))
+            for row in csv_reader:
+                if not row[0]:
+                    continue
+                inventory_items.append({
+                    "group_id":row[0],
+                    "name":row[1],
+                    "total":row[2],
+                    "price":row[3],
+                    "photo":row[4],
+                    "added_by_id":request.user.id
+                })
+        except csv.Error as e:
+            raise Exception(e)
+
+        if not inventory_items:
+            raise Exception("No data found in the csv file")
+        
+        data_validation = self.serializer_class(data=inventory_items, many=True)
+        data_validation.is_valid(raise_exception=True)
+        data_validation.save()
+
+        return Response({"success": "Inventory items added successfully"})
